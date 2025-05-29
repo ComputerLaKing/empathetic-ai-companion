@@ -54,6 +54,7 @@ def generate_reply(prompt):
         reply = response.choices[0].message.content.strip()
         return reply
     except Exception as e:
+        st.error(f"OpenAI error: {e}")  # 👈 Shows real error
         return "⚠️ Sorry, something went wrong."
 
 # User input
