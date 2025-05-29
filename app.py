@@ -3,6 +3,7 @@ from openai import OpenAI
 import os
 from datetime import datetime
 from textblob import TextBlob
+import requests
 
 # Load API key from Streamlit secrets
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -34,28 +35,28 @@ def detect_mood(text):
 
 # Function to generate GPT response
 def generate_reply(prompt):
-    system_message = {
-        "role": "system",
-        "content": (
-            "You are an empathetic, non-judgmental, non-advising companion. "
-            "Reflect emotions, validate feelings, and listen without offering advice. "
-            "Speak with kindness and emotional intelligence."
-        )
+    headers = {
+        "Authorization": f"Bearer {st.secrets['OPENROUTER_API_KEY']}",
+        "HTTP-Referer": "https://your-app-name.streamlit.app",  # Optional but recommended
+        "Content-Type": "application/json",
     }
-    messages = [system_message] + st.session_state.messages + [{"role": "user", "content": prompt}]
+
+    payload = {
+        "model": "openai/gpt-3.5-turbo",
+        "messages": [
+            {"role": "system", "content": "You are an empathetic, non-judgmental companion..."},
+            {"role": "user", "content": prompt}
+        ],
+    }
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            temperature=0.7,
-            max_tokens=150
-        )
-        return response.choices[0].message.content.strip()
+        res = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+        reply = res.json()['choices'][0]['message']['content']
+        return reply.strip()
     except Exception as e:
-        st.error(f"OpenAI error: {e}")
+        st.error(f"OpenRouter error: {e}")
         return "⚠️ Sorry, something went wrong."
-
+    
 # User input
 user_input = st.chat_input("Talk to me...")
 if user_input:
