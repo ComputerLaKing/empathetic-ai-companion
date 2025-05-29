@@ -1,11 +1,11 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import os
 from datetime import datetime
 from textblob import TextBlob
 
 # Load API key from Streamlit secrets
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 st.set_page_config(page_title="Empathic AI Companion", layout="centered")
 st.title("🧠 Empathic AI Companion")
@@ -45,16 +45,15 @@ def generate_reply(prompt):
     messages = [system_message] + st.session_state.messages + [{"role": "user", "content": prompt}]
 
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=messages,
             temperature=0.7,
             max_tokens=150
         )
-        reply = response.choices[0].message.content.strip()
-        return reply
+        return response.choices[0].message.content.strip()
     except Exception as e:
-        st.error(f"OpenAI error: {e}")  # 👈 Shows real error
+        st.error(f"OpenAI error: {e}")
         return "⚠️ Sorry, something went wrong."
 
 # User input
