@@ -41,7 +41,7 @@ if prompt := st.chat_input("Type your thoughts..."):
                     "HTTP-Referer": "https://empathetic-ai-companion.streamlit.app/"  # Replace with your project name or domain
                 },
                 json={
-                    "model": "openrouter/claude-3-haiku",  # Change model if you like
+                    "model": "claude-3-haiku",  # Change model if you like
                     "messages": st.session_state.messages,
                     "temperature": 0.7
                 },
