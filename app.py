@@ -38,7 +38,7 @@ if prompt := st.chat_input("Type your thoughts..."):
                 headers={
                     "Authorization": f"Bearer {API_KEY}",
                     "Content-Type": "application/json",
-                    "HTTP-Referer": "your-app-name"  # Replace with your project name or domain
+                    "HTTP-Referer": "https://empathetic-ai-companion.streamlit.app/"  # Replace with your project name or domain
                 },
                 json={
                     "model": "openrouter/claude-3-haiku",  # Change model if you like
