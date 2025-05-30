@@ -2,57 +2,31 @@ import streamlit as st
 import requests
 import os
 
-st.set_page_config(page_title="Empathetic AI Companion", layout="centered")
-st.title("💬 Empathetic AI Companion")
-st.write("A non-judgmental, empathetic friend who listens — not advises.")
+st.set_page_config(page_title="AI Companion", layout="centered")
+st.title("🧠 Empathetic AI Companion")
 
-# Get API key from environment variable
-API_KEY = os.getenv("OPENROUTER_API_KEY")
+API_URL = "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium"
+HF_TOKEN = os.getenv("HF_TOKEN")
 
-if not API_KEY:
-    st.error("⚠️ Missing OpenRouter API Key. Please set the OPENROUTER_API_KEY environment variable.")
-    st.stop()
+headers = {
+    "Authorization": f"Bearer {HF_TOKEN}"
+}
 
-# Chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "system", "content": "You are an empathetic AI friend who listens carefully, is non-judgmental, and never gives advice."}
-    ]
+def query_huggingface(prompt):
+    payload = {"inputs": prompt}
+    response = requests.post(API_URL, headers=headers, json=payload)
+    if response.status_code != 200:
+        return f"Error: {response.status_code} — {response.text}"
+    try:
+        return response.json()[0]["generated_text"]
+    except Exception as e:
+        return f"Response parsing error: {str(e)}"
 
-# Show chat history
-for msg in st.session_state.messages[1:]:  # skip system message
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+with st.form("chat_form"):
+    user_input = st.text_input("You:", "", placeholder="Type how you feel...", label_visibility="visible")
+    submit = st.form_submit_button("Send")
 
-# User input
-if prompt := st.chat_input("Type your thoughts..."):
-    # Show user message
-    st.chat_message("user").markdown(prompt)
-    st.session_state.messages.append({"role": "user", "content": prompt})
-
-    # API call
-    with st.chat_message("assistant"):
-        try:
-            response = requests.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {API_KEY}",
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": "https://empathetic-ai-companion.streamlit.app/"  # Replace with your project name or domain
-                },
-                json={
-                    "model": "meta-llama/llama-3.3-8b-instruct:free",  # Change model if you like
-                    "messages": st.session_state.messages,
-                    "temperature": 0.7
-                },
-                timeout=60
-            )
-
-            if response.status_code == 200:
-                reply = response.json()["choices"][0]["message"]["content"]
-                st.markdown(reply)
-                st.session_state.messages.append({"role": "assistant", "content": reply})
-            else:
-                st.error(f"Error: {response.status_code} — {response.text}")
-        except Exception as e:
-            st.error(f"Exception: {e}")
+if submit and user_input:
+    with st.spinner("AI Companion is thinking..."):
+        response = query_huggingface(user_input)
+        st.markdown(f"**AI:** {response}")
